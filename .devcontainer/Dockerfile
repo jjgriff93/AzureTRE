@@ -15,6 +15,9 @@ RUN apt-get update -y && apt-get install -y unzip wget \
     && wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_$(dpkg --print-architecture).zip" -O /tmp/terraform.zip \
     && unzip /tmp/terraform.zip -d /usr/local/bin/
 
+# Install az cli
+RUN curl https://raw.githubusercontent.com/microsoft/vscode-dev-containers/main/script-library/azcli-debian.sh | sudo bash
+
 # Make sure docker group id matches that on WSL.
 RUN groupadd --gid 1001 docker
 
