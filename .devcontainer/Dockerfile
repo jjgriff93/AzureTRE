@@ -4,10 +4,12 @@
 ARG VARIANT="3"
 FROM mcr.microsoft.com/vscode/devcontainers/python:dev-${VARIANT}
 
+ARG USERNAME=vscode
+
 # [Option] Install Node.js
 ARG INSTALL_NODE="true"
 ARG NODE_VERSION="lts/*"
-RUN if [ "${INSTALL_NODE}" = "true" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
+RUN if [ "${INSTALL_NODE}" = "true" ]; then su $USERNAME -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
 # Install terraform
 ARG TERRAFORM_VERSION
@@ -15,11 +17,11 @@ RUN apt-get update -y && apt-get install -y unzip wget \
     && wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_$(dpkg --print-architecture).zip" -O /tmp/terraform.zip \
     && unzip /tmp/terraform.zip -d /usr/local/bin/
 
-# Install az cli
-RUN curl https://raw.githubusercontent.com/microsoft/vscode-dev-containers/main/script-library/azcli-debian.sh | sudo bash
-
 # Make sure docker group id matches that on WSL.
 RUN groupadd --gid 1001 docker
+ARG DOCKER_GROUP_ID
+COPY .devcontainer/scripts/docker-client.sh /tmp/
+RUN /tmp/docker-client.sh $USERNAME
 
 # Install Docker
 RUN apt-get update && sudo apt-get install -y  apt-transport-https ca-certificates curl gnupg  lsb-release \
@@ -38,12 +40,12 @@ RUN apt-get install -y python3 python3-venv libaugeas0 \
     && /opt/certbot/bin/pip install certbot
 
 # Install Porter
-RUN export PORTER_HOME=/home/vscode/.porter \
+RUN export PORTER_HOME=/home/$USERNAME/.porter \
     && curl -L https://cdn.porter.sh/latest/install-linux.sh | bash \
     && ${PORTER_HOME}/porter mixin install docker \
-    && chown -R vscode ${PORTER_HOME}
+    && chown -R $USERNAME ${PORTER_HOME}
 
-ENV PATH /home/vscode/.porter/:$PATH
+ENV PATH /home/$USERNAME/.porter/:$PATH
 
 # Install requirements
 COPY ["requirements.txt", "/tmp/pip-tmp/" ]
@@ -53,6 +55,8 @@ COPY ["docs/requirements.txt", "/tmp/pip-tmp/docs/"]
 RUN apt-get update -y && apt-get install -y cmake \
     && pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt && rm -rf /tmp/pip-tmp
 
-RUN usermod -a -G docker vscode
+# Install azure-cli
+COPY ./.devcontainer/scripts/azure-cli.sh /tmp/
+RUN /tmp/azure-cli.sh
 
-USER vscode
+USER $USERNAME
