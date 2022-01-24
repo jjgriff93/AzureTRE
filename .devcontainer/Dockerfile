@@ -18,7 +18,6 @@ RUN apt-get update -y && apt-get install -y unzip wget \
     && unzip /tmp/terraform.zip -d /usr/local/bin/
 
 # Make sure docker group id matches that on WSL.
-RUN groupadd --gid 1001 docker
 ARG DOCKER_GROUP_ID
 COPY .devcontainer/scripts/docker-client.sh /tmp/
 RUN /tmp/docker-client.sh $USERNAME
