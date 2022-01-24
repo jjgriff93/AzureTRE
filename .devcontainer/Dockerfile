@@ -45,18 +45,6 @@ RUN export PORTER_HOME=/home/vscode/.porter \
 
 ENV PATH /home/vscode/.porter/:$PATH
 
-# Install PowerShell and Az module
-ARG POWERSHELL_VERSION="7.2.1"
-RUN apt-get update -y && apt-get install -y unzip wget \
-    && ARCH=$(dpkg --print-architecture) \
-    && if [ $ARCH = "amd64" ]; then ARCH="x64"; fi \
-    && wget "https://github.com/PowerShell/PowerShell/releases/download/v${POWERSHELL_VERSION}/powershell-${POWERSHELL_VERSION}-linux-${ARCH}.tar.gz" -O /tmp/powershell.tar.gz \
-    && mkdir -p /opt/microsoft/powershell/7 \
-    && tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/7 \
-    && chmod +x /opt/microsoft/powershell/7/pwsh \
-    && ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh \
-    && pwsh -c Install-Module Az -Force
-
 # Install requirements
 COPY ["requirements.txt", "/tmp/pip-tmp/" ]
 COPY ["api_app/requirements.txt", "api_app/requirements-dev.txt", "/tmp/pip-tmp/api_app/" ]
